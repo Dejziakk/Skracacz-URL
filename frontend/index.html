@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <title>Skracacz URL</title>
+</head>
+<body>
+    <h1>Witaj w Skracaczu URL!</h1>
+    <p>To jest frontend naszego projektu.</p>
+
+    <p id="status">Oczekiwanie na backend...</p>
+<script>
+    fetch("/api/status")
+        .then(response => response.json())
+        .then(data => {
+            document.getElementById("status").textContent = data.message;
+        });
+</script>
+</body>
+</html>
