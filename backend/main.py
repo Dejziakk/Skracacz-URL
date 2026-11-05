@@ -10,6 +10,9 @@ app = FastAPI()
 def status():
     return {"message": "Backend działa!"}
 
+@app.get("/health")
+def health():
+    return {"status": "ok"}
 
 @app.get("/db-status")
 def db_status():
