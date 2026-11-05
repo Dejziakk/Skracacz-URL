@@ -60,6 +60,92 @@ Aby zatrzymać kontenery, wpisz:
 docker compose down
 ```
 
+## Format wymiany danych (JSON)
+
+Wymiana danych z backendem odbywa się w formacie JSON.
+
+### 1. Pobranie pojedynczego zasobu – `GET /api/link/{link_id}`
+
+- **Odpowiedź (200 OK):**
+  ```json
+  {
+    "link": "https://example.com",
+    "code": "alias"
+  }
+  ```
+- **Błąd (404 Not Found):**
+  ```json
+  {
+    "detail": "Link not found"
+  }
+  ```
+
+### 2. Pobranie listy zasobów – `GET /api/link`
+
+- **Odpowiedź (200 OK):**
+  ```json
+  [
+    {
+      "link": "https://example.com",
+      "code": "alias1"
+    },
+    {
+      "link": "https://inna-strona.pl",
+      "code": "alias2"
+    }
+  ]
+  ```
+
+### 3. Utworzenie nowego zasobu – `POST /api/link`
+
+- **Żądanie:**
+  ```json
+  {
+    "link": "https://example.com",
+    "code": "alias"
+  }
+  ```
+  *(pole `code` jest opcjonalne)*
+
+- **Odpowiedź (200 OK):**
+  ```json
+  {
+    "link": "https://example.com",
+    "code": "alias"
+  }
+  ```
+- **Błąd (400 Bad Request):**
+  ```json
+  {
+    "detail": "Link already exists"
+  }
+  ```
+
+### 4. Usunięcie zasobu – `DELETE /api/link/{link_id}`
+
+- **Odpowiedź (200 OK):**
+  ```json
+  {
+    "link": "https://example.com",
+    "code": "alias"
+  }
+  ```
+- **Błąd (404 Not Found):**
+  ```json
+  {
+    "detail": "Link not found"
+  }
+  ```
+
+### 5. Sprawdzenie stanu usługi – `GET /api/health`
+
+- **Odpowiedź (200 OK):**
+  ```json
+  {
+    "status": "ok"
+  }
+  ```
+
 ## Aktualny stan projektu
 
 - Utworzono frontend oparty na Nginx.
