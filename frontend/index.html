@@ -2,19 +2,193 @@
 <html lang="pl">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Skracacz URL</title>
 </head>
 <body>
-    <h1>Witaj w Skracaczu URL!</h1>
-    <p>To jest frontend naszego projektu.</p>
 
-    <p id="status">Oczekiwanie na backend...</p>
-<script>
-    fetch("/api/status")
-        .then(response => response.json())
-        .then(data => {
-            document.getElementById("status").textContent = data.message;
-        });
-</script>
+    <h1>Skracacz URL</h1>
+
+    <nav>
+        <button onclick="showView('create')">Skróć link</button>
+        <button onclick="showView('list')">Moje linki</button>
+    </nav>
+
+    <section id="create-view">
+        <h2>Skróć nowy link</h2>
+
+        <form id="link-form">
+            <label for="url">Długi adres URL:</label>
+            <input
+                type="url"
+                id="url"
+                placeholder="https://www.example.com"
+                required
+            >
+
+            <label for="code">Własny kod (opcjonalnie):</label>
+            <input
+                type="text"
+                id="code"
+                placeholder="np. mojlink"
+                minlength="2"
+                maxlength="20"
+            >
+
+            <button type="submit">Skróć link</button>
+        </form>
+
+        <p id="result"></p>
+    </section>
+
+    <section id="list-view" hidden>
+        <h2>Moje linki</h2>
+
+        <button onclick="loadLinks()">Odśwież listę</button>
+
+        <div id="links-list"></div>
+    </section>
+
+    <script>
+        function showView(view) {
+            document.getElementById("create-view").hidden =
+                view !== "create";
+
+            document.getElementById("list-view").hidden =
+                view !== "list";
+
+            if (view === "list") {
+                loadLinks();
+            }
+        }
+
+        document.getElementById("link-form")
+            .addEventListener("submit", async function(event) {
+                event.preventDefault();
+
+                const url = document.getElementById("url").value;
+                const code = document.getElementById("code").value;
+                const result = document.getElementById("result");
+
+                result.textContent = "Tworzenie linku...";
+
+                try {
+                    const response = await fetch("/api/link", {
+                        method: "POST",
+                        headers: {
+                            "Content-Type": "application/json"
+                        },
+                        body: JSON.stringify({
+                            link: url,
+                            code: code || null
+                        })
+                    });
+
+                    const data = await response.json();
+
+                    if (!response.ok) {
+                        result.textContent =
+                            "Błąd: " + JSON.stringify(data.detail);
+                        return;
+                    }
+
+                    const shortUrl =
+                        window.location.origin + "/api/r/" + data.code;
+
+                    result.textContent = "Gotowy link: ";
+
+                    const anchor = document.createElement("a");
+                    anchor.href = shortUrl;
+                    anchor.textContent = shortUrl;
+                    anchor.target = "_blank";
+                    anchor.rel = "noopener noreferrer";
+
+                    result.appendChild(anchor);
+
+                    document.getElementById("link-form").reset();
+
+                } catch (error) {
+                    result.textContent =
+                        "Nie udało się połączyć z backendem.";
+                }
+            });
+
+        async function loadLinks() {
+            const container = document.getElementById("links-list");
+            container.textContent = "Ładowanie...";
+
+            try {
+                const response = await fetch("/api/link");
+
+                if (!response.ok) {
+                    throw new Error("Błąd pobierania linków");
+                }
+
+                const links = await response.json();
+                container.replaceChildren();
+
+                if (links.length === 0) {
+                    container.textContent = "Brak zapisanych linków.";
+                    return;
+                }
+
+                for (const link of links) {
+                    const item = document.createElement("div");
+
+                    const shortUrl =
+                        window.location.origin + "/api/r/" +
+                        encodeURIComponent(link.code);
+
+                    const anchor = document.createElement("a");
+                    anchor.href = shortUrl;
+                    anchor.textContent = shortUrl;
+                    anchor.target = "_blank";
+                    anchor.rel = "noopener noreferrer";
+
+                    const details = document.createElement("p");
+                    details.textContent =
+                        "Oryginalny adres: " + link.link +
+                        " | Odwiedziny: " + (link.visits ?? 0);
+
+                    const deleteButton = document.createElement("button");
+                    deleteButton.textContent = "Usuń";
+
+                    deleteButton.addEventListener("click", async () => {
+                        if (!confirm("Czy usunąć ten link?")) {
+                            return;
+                        }
+
+                        try {
+                            const response = await fetch(
+                                "/api/link/" + encodeURIComponent(link.code),
+                                { method: "DELETE" }
+                            );
+
+                            if (!response.ok) {
+                                throw new Error("Nie udało się usunąć linku");
+                            }
+
+                            loadLinks();
+
+                        } catch (error) {
+                            alert("Błąd podczas usuwania linku.");
+                        }
+                    });
+
+                    item.appendChild(anchor);
+                    item.appendChild(details);
+                    item.appendChild(deleteButton);
+                    item.appendChild(document.createElement("hr"));
+
+                    container.appendChild(item);
+                }
+
+            } catch (error) {
+                container.textContent =
+                    "Nie udało się pobrać listy linków.";
+            }
+        }
+    </script>
+
 </body>
 </html>
