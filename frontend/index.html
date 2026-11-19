@@ -93,7 +93,8 @@
                     }
 
                     const shortUrl =
-                        window.location.origin + "/api/r/" + data.code;
+                        window.location.origin + "/r/" +
+                        encodeURIComponent(data.code);
 
                     result.textContent = "Gotowy link: ";
 
@@ -136,7 +137,7 @@
                     const item = document.createElement("div");
 
                     const shortUrl =
-                        window.location.origin + "/api/r/" +
+                        window.location.origin + "/r/" +
                         encodeURIComponent(link.code);
 
                     const anchor = document.createElement("a");
